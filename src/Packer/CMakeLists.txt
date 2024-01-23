@@ -8,9 +8,12 @@ set( externHeaders
 )
 
 set( libHeaders 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/StandardLib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Pack.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Serial.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/AutoPtr.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ISerial.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialBase.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialOut.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialIn.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeFactory.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeReg.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Type.h
@@ -18,7 +21,9 @@ set( libHeaders
 
 set( libSource
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Pack.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Serial.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialBase.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialOut.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialIn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeFactory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeReg.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Type.cpp
