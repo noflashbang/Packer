@@ -10,7 +10,7 @@ void SerializerIn::IO(unsigned short& io)
 	io = stoul(m_Data);
 }
 
-void SerializerIn::IO(int &io)
+void SerializerIn::IO(int& io)
 {
 	io = stoi(m_Data);
 }
@@ -35,7 +35,7 @@ void SerializerIn::IO(float& io)
 	io = stof(m_Data);
 }
 
-void SerializerIn::IO(double &io)
+void SerializerIn::IO(double& io)
 {
 	io = stod(m_Data);
 }
@@ -50,16 +50,16 @@ void SerializerIn::IO(unsigned char& io)
 	io = m_Data[0];
 }
 
-void SerializerIn::IO(bool &io)
+void SerializerIn::IO(bool& io)
 {
 	static std::string TrueString = "TRUE";
 
 	std::string hold;
 	this->IO(hold);
 
-	hold = Util::StringToUpper(hold);
+	std::transform(hold.begin(), hold.end(), hold.begin(), ::toupper);
 
-	if ((strcmp(hold.c_str(), TrueString.c_str())) == 0)
+	if (hold.compare(TrueString) == 0)
 	{
 		io = true;
 	}
@@ -68,7 +68,7 @@ void SerializerIn::IO(bool &io)
 		io = false;
 	}
 }
-void SerializerIn::IO(std::string &io)
+void SerializerIn::IO(std::string& io)
 {
 	io = m_Data;
 }
@@ -123,12 +123,12 @@ void SerializerIn::IO(std::vector<unsigned char>& io)
 	ReadArray<unsigned char, SerializerIn>(io);
 }
 
-void SerializerIn::IO(std::vector<bool> &io)
+void SerializerIn::IO(std::vector<bool>& io)
 {
 	ReadArray<bool, SerializerIn>(io);
 }
 
-void SerializerIn::IO(std::vector<std::string> &io)
+void SerializerIn::IO(std::vector<std::string>& io)
 {
 	ReadArray<std::string, SerializerIn>(io);
 }

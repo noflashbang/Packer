@@ -10,7 +10,7 @@ void SerializerOut::IO(unsigned short& io)
 	Serialize(io);
 }
 
-void SerializerOut::IO(int &io)
+void SerializerOut::IO(int& io)
 {
 	Serialize(io);
 }
@@ -35,7 +35,7 @@ void SerializerOut::IO(float& io)
 	Serialize(io);
 }
 
-void SerializerOut::IO(double &io)
+void SerializerOut::IO(double& io)
 {
 	Serialize(io);
 }
@@ -50,7 +50,7 @@ void SerializerOut::IO(unsigned char& io)
 	Serialize(io);
 }
 
-void SerializerOut::IO(bool &io)
+void SerializerOut::IO(bool& io)
 {
 	static std::string TrueString = "TRUE";
 	static std::string FalseString = "FALSE";
@@ -59,7 +59,7 @@ void SerializerOut::IO(bool &io)
 	else
 		this->IO(FalseString);
 }
-void SerializerOut::IO(std::string &io)
+void SerializerOut::IO(std::string& io)
 {
 	m_Data.append(io);
 }
@@ -123,6 +123,3 @@ void SerializerOut::IO(std::vector<std::string>& io)
 {
 	SerializeArray(io);
 }
-
-
-

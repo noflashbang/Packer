@@ -3,11 +3,10 @@
 #include "StandardLib.h"
 #include "SerialBase.h"
 
-
 class SerializerIn : public SerialBase
 {
 public:
-	SerializerIn(std::string& data) :  SerialBase(data) {}
+	SerializerIn(std::string& data) : SerialBase(data) {}
 	virtual ~SerializerIn() {};
 
 	virtual void IO(short& io);
@@ -37,7 +36,7 @@ public:
 	virtual void IO(std::vector <std::string>& io);
 
 protected:
-	
+
 	SerializerIn() = delete;
 	SerializerIn(const SerializerIn&) = delete;
 	SerializerIn& operator=(const SerializerIn&) = delete;

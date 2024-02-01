@@ -3,7 +3,6 @@
 #include "StandardLib.h"
 #include "ISerial.h"
 
-
 class SerialBase : ISerializer
 {
 public:
@@ -41,16 +40,16 @@ public:
 protected:
 
 	template <typename T>
-	void inline Serialize(T &io)
+	void inline Serialize(T& io)
 	{
 		auto result = std::format("{}", io);
 		m_Data.append(result);
 	};
 
 	template <typename T>
-	void SerializeArray(std::vector<T> &io)
+	void SerializeArray(std::vector<T>& io)
 	{
-		for(auto iter = io.begin(); iter != io.end(); iter++ )
+		for (auto iter = io.begin(); iter != io.end(); iter++)
 		{
 			if (iter != io.begin())
 			{
@@ -67,7 +66,7 @@ protected:
 		int ii = 0;
 		auto tokens = SplitString(m_Data, ArraySeperator);
 		io.resize(tokens.size());
-		for(auto token : tokens)
+		for (auto token : tokens)
 		{
 			S in(&token);
 			T holder;
@@ -100,4 +99,3 @@ private:
 	SerialBase(const SerialBase&) = delete;
 	SerialBase& operator=(const SerialBase&) = delete;
 };
-

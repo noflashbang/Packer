@@ -16,7 +16,9 @@ set( libHeaders
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialIn.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeFactory.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeReg.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Type.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/BaseTypeBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VectorTypeBuilder.h
 )
 
 set( libSource
@@ -26,7 +28,7 @@ set( libSource
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialIn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeFactory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeReg.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Type.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/TypeBuilder.cpp
 )
 
 add_library (Packer SHARED ${libSource} ${libHeaders} ${externHeaders}) 
