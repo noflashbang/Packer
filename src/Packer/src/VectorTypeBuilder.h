@@ -11,16 +11,12 @@
 #include "TypeFactory.h"
 
 
-//forward
-class TypeFactory;
 
 template <typename T>
 class VectorTypeBuilder : public TypeBuilder
 {
 public:
-	VectorTypeBuilder()
-	{
-	};
+	VectorTypeBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~VectorTypeBuilder() {};
 
 	virtual int BuildType(std::string key, any_type* object, Package pack)
@@ -39,7 +35,7 @@ public:
 			iter = childmap.find("SIZE");
 			if (iter != childmap.end())
 			{
-				err = TypeFactory::BuildTypeFromPackage("SIZE", &size, iter->second);
+				err = m_TypeFactory->BuildTypeFromPackage("SIZE", &size, iter->second);
 				if (err != BUILD_OKAY)
 					return err;
 			}
@@ -53,7 +49,7 @@ public:
 				iter = childmap.find(numstr);
 				if (iter != childmap.end())
 				{
-					err = TypeFactory::BuildTypeFromPackage(numstr, &realelem, iter->second);
+					err = m_TypeFactory->BuildTypeFromPackage(numstr, &realelem, iter->second);
 					if (err != BUILD_OKAY)
 						return err;
 
@@ -78,7 +74,7 @@ public:
 		//add size
 		unsigned long size = vector->size();
 		Package sizepack;
-		err = TypeFactory::BuildPackageFromType("SIZE", &size, &sizepack);
+		err = m_TypeFactory->BuildPackageFromType("SIZE", &size, &sizepack);
 		buildpack->AddChild(sizepack);
 
 		//now add all the elements
@@ -88,7 +84,10 @@ public:
 			memset(numstr, 0, 10);
 			_itoa_s(iter, numstr, 10, 10);
 			Package elempack;
-			err = TypeFactory::BuildPackageFromType(numstr, &((*vector)[iter]), &elempack);
+
+			auto elem = vector->at(iter);
+			
+			err = m_TypeFactory->BuildPackageFromType(numstr, &elem, &elempack);
 			if (err == BUILD_OKAY)
 			{
 				buildpack->AddChild(elempack);

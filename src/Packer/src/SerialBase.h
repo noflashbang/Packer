@@ -68,7 +68,7 @@ protected:
 		io.resize(tokens.size());
 		for (auto token : tokens)
 		{
-			S in(&token);
+			S in(token);
 			T holder;
 			in.IO(holder);
 			io.at(ii) = holder;

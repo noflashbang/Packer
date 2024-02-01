@@ -1,5 +1,4 @@
-#ifndef TYPEREG_H
-#define TYPEREG_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -36,9 +35,7 @@ private:
 };
 
 /*
- This whole class is pretty hacky,
- but it was the only way I could think of
- to automate the type registration process.
+ This whole class is pretty hacky, but I love it all the same.
 */
 class TypeRegister
 {
@@ -83,6 +80,7 @@ public:
 	};
 
 private:
+
 	template <typename T>
 	static void RegisterOrGetType(T* null, TypeRegistration* tr)
 	{
@@ -94,5 +92,3 @@ private:
 		(*tr) = typereg;
 	};
 };
-
-#endif

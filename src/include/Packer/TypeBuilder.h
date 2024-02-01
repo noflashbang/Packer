@@ -3,22 +3,18 @@
 #include <string>
 #include <vector>
 
-#include "SerialIn.h"
-#include "SerialOut.h"
+
 #include "Pack.h"
+#include "TypeDef.h"
 #include "TypeReg.h"
 
-#pragma warning(disable: 4786)
-
-typedef void any_type;
-
-#define BUILD_OKAY 1
-#define BUILD_ERROR -1
+//forward
+class TypeFactory;
 
 class TypeBuilder
 {
 public:
-	TypeBuilder();
+	TypeBuilder(TypeFactory* pTypeFactory);
 	virtual ~TypeBuilder() {};
 
 	virtual int BuildType(std::string key, any_type* object, Package pack) = 0;
@@ -29,6 +25,8 @@ public:
 	bool IsBuilderType(long ID);
 	bool IsBuilderTypeName(std::string name);
 
+protected:
+	TypeFactory* m_TypeFactory;
 private:
 	TypeRegistration m_TypeReg;
 };

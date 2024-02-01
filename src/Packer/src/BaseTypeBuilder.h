@@ -6,6 +6,7 @@
 #include "SerialIn.h"
 #include "SerialOut.h"
 #include "Pack.h"
+#include "TypeDef.h"
 #include "TypeReg.h"
 #include "TypeBuilder.h"
 
@@ -13,7 +14,7 @@ template <typename T>
 class BaseTypeBuilder : public TypeBuilder
 {
 public:
-	BaseTypeBuilder() {};
+	BaseTypeBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~BaseTypeBuilder() {};
 
 	virtual int BuildType(std::string key, any_type* object, Package pack)

@@ -1,7 +1,4 @@
-#ifndef PACK_H
-#define PACK_H
-
-#pragma warning(disable: 4786)
+#pragma once
 
 #include <string>
 #include <vector>
@@ -187,4 +184,4 @@ inline void Escape2String(std::string* str)
 	}
 	(*str) = hold;
 };
-#endif
+

@@ -1,37 +1,34 @@
-#ifndef TYPEFACTORY_H
-#define TYPEFACTORY_H
+#pragma once
 
 #include <vector>
 
-#include "TypeBuilder.h"
 #include "Pack.h"
 #include "TypeReg.h"
 #include "TypeBuilder.h"
-#include "BaseTypeBuilder.h"
-#include "VectorTypeBuilder.h"
+
+
+//forward
+class TypeBuilder;
 
 class TypeFactory
 {
 public:
-
+	TypeFactory();
 	~TypeFactory();
 
-	static TypeFactory* GetInstance();
-	static void DeleteInstance();
-
 	template<typename T>
-	static long RegisterNewFactory(T* PointerOfType, std::string TypeName, TypeBuilder* Builder)
+	long RegisterNewFactory(T* PointerOfType, std::string TypeName, TypeBuilder* Builder)
 	{
 		TypeRegistration typereg;
 		TypeRegister::RegisterTypeInfo(PointerOfType, TypeName);
 		TypeRegister::GetTypeRegister(PointerOfType, &typereg);
 		Builder->SetTypeRegistration(typereg);
-		GetInstance()->AddBuilderInternal(Builder);
+		AddBuilderInternal(Builder);
 		return typereg.GetTypeID();
 	};
 
 	template<typename T>
-	static int BuildTypeFromPackage(std::string key, T* object, Package pack)
+	int BuildTypeFromPackage(std::string key, T* object, Package pack)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		Package found = NULL;
@@ -39,18 +36,18 @@ public:
 		if (!located)
 			return BUILD_ERROR;
 
-		return GetInstance()->CallBuilder_BuildType(tobuild, key, object, found);
+		return CallBuilder_BuildType(tobuild, key, object, found);
 	};
 
 	template<typename T>
-	static int BuildPackageFromType(std::string key, T* object, Package* pack)
+	int BuildPackageFromType(std::string key, T* object, Package* pack)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		return GetInstance()->CallBuilder_BuildPack(tobuild, key, object, pack);
+		return CallBuilder_BuildPack(tobuild, key, object, pack);
 	};
 
 	template<typename T>
-	static int BuildTypeFromString(std::string key, T* object, std::string objString)
+	int BuildTypeFromString(std::string key, T* object, std::string objString)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
@@ -67,18 +64,18 @@ public:
 		if (!located)
 			return BUILD_ERROR;
 
-		err = GetInstance()->CallBuilder_BuildType(tobuild, key, object, found);
+		err = CallBuilder_BuildType(tobuild, key, object, found);
 		delete pack;
 		return err;
 	};
 
 	template<typename T>
-	static int BuildStringFromType(std::string key, T* object, std::string* pObjString)
+	int BuildStringFromType(std::string key, T* object, std::string* pObjString)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
 		Package pack = NULL;
-		err = GetInstance()->CallBuilder_BuildPack(tobuild, key, object, &pack);
+		err = CallBuilder_BuildPack(tobuild, key, object, &pack);
 		if (err != BUILD_OKAY)
 		{
 			delete pack;
@@ -90,10 +87,10 @@ public:
 		return err;
 	};
 
-	static void AddDefaultFactories(bool basetypes, bool vectortypes);
+	void AddDefaultFactories(bool basetypes, bool vectortypes);
 
 private:
-	TypeFactory();
+	
 
 	void AddStandardFactories(bool basetypes, bool vectortypes);
 	void AddBuilderInternal(TypeBuilder* Builder);
@@ -102,7 +99,5 @@ private:
 	int CallBuilder_BuildType(long typeID, std::string key, any_type* object, Package pack);
 	int CallBuilder_BuildPack(long typeID, std::string key, any_type* object, Package* pack);
 
-	static TypeFactory* m_Instance;
 	std::vector<TypeBuilder*> m_TypeBuilders;
 };
-#endif

@@ -1,8 +1,8 @@
 #include "TypeBuilder.h"
 
-TypeBuilder::TypeBuilder()
+TypeBuilder::TypeBuilder(TypeFactory* pTypeFactory)
 {
-	//nothing
+	m_TypeFactory = pTypeFactory;
 };
 void TypeBuilder::SetTypeRegistration(TypeRegistration type)
 {
