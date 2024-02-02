@@ -52,7 +52,7 @@ public:
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
 		Package pack = NULL;
-		err = BasePack::FromStream(&objString, &pack);
+		err = IPack::FromStream(objString, &pack);
 		if (err != 1)
 		{
 			delete pack;
@@ -82,7 +82,7 @@ public:
 			return err;
 		}
 
-		err = pack->GetStreamEscape(pObjString);
+		*pObjString = pack->GetStreamEscape();
 		delete pack;
 		return err;
 	};

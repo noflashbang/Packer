@@ -141,17 +141,16 @@ TypeFactory::~TypeFactory()
 	}
 }
 
-int TypeFactory::CallBuilder_BuildType(long TypeID, std::string key, any_type* object, Package pack)
+int TypeFactory::CallBuilder_BuildType(long TypeID, std::string key, any_type* object, Package pPack)
 {
 	int ret = BUILD_OKAY;
 	TypeBuilder* builder = FindBuilder(TypeID);
 	if (builder != NULL)
 	{
-		std::string typen;
-		pack->GetType(&typen);
+		std::string typen = pPack->GetType();
 		if (builder->IsBuilderTypeName(typen)) //check for correct ptr and pack type
 		{
-			ret = builder->BuildType(key, object, pack);
+			ret = builder->BuildType(key, object, pPack);
 		}
 		else
 		{

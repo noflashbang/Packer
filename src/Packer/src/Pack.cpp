@@ -1,7 +1,7 @@
 #include "Pack.h"
 #include <stack>
 
-int BasePack::FromStream(std::string* stream, BasePack** retpack)
+int IPack::FromStream(const std::string& stream, Package* retpack)
 {
 	(*retpack) = NULL;
 
@@ -18,8 +18,8 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 	std::stack<MultiPack*> packstack;
 
 	unsigned long size = 0;
-	unsigned long begin = stream->find_first_of(PACK_B);
-	unsigned long end = stream->find_last_of(PACK_E);
+	unsigned long begin = stream.find_first_of(PACK_B);
+	unsigned long end = stream.find_last_of(PACK_E);
 	unsigned long work = begin;
 	unsigned long current = begin;
 	if (begin == std::string::npos || end == std::string::npos)
@@ -36,42 +36,42 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 	while (statestack.top() != STATE_ERROR && current <= end)
 	{
 		//look for state changes
-		if (stream->at(current) == PACK_B)
+		if (stream.at(current) == PACK_B)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
 
 			statestack.push(STATE_LESS);
 		}
-		else if (stream->at(current) == TYPE_B)
+		else if (stream.at(current) == TYPE_B)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
 
 			statestack.push(STATE_BEGINP);
 		}
-		else if (stream->at(current) == TYPE_E)
+		else if (stream.at(current) == TYPE_E)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
 
 			statestack.push(STATE_ENDP);
 		}
-		else if (stream->at(current) == VALUE)
+		else if (stream.at(current) == VALUE)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
 
 			statestack.push(STATE_EQUAL);
 		}
-		else if (stream->at(current) == PACK_E)
+		else if (stream.at(current) == PACK_E)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
 
 			statestack.push(STATE_GREATER);
 		}
-		else if (stream->at(current) == ESCAPE)
+		else if (stream.at(current) == ESCAPE)
 		{
 			if (statestack.top() == STATE_NOSTATE)
 				statestack.pop();
@@ -130,7 +130,7 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 			if (statestack.top() == STATE_LESS)
 			{
 				//retrive Key
-				Key = stream->substr(work, ((current)-work));
+				Key = stream.substr(work, ((current)-work));
 				//set the begining of type
 				work = (current + 1);
 			}
@@ -151,7 +151,7 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 			if (statestack.top() == STATE_BEGINP)
 			{
 				//retrive type
-				Type = stream->substr(work, ((current)-work));
+				Type = stream.substr(work, ((current)-work));
 			}
 			else
 			{
@@ -192,7 +192,7 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 				ValuePack* pack = new ValuePack;
 				pack->SetKey(Key);
 				pack->SetType(Type);
-				Value = stream->substr(work, ((current)-work));
+				Value = stream.substr(work, ((current)-work));
 				pack->SetValueEscape(Value);
 				if (multi)
 				{
@@ -219,7 +219,7 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 				}
 				else
 				{
-					BasePack* hold = packstack.top();
+					IPack* hold = packstack.top();
 					packstack.pop();
 					packstack.top()->AddChild(hold);
 				}
@@ -251,77 +251,75 @@ int BasePack::FromStream(std::string* stream, BasePack** retpack)
 	return 1;
 };
 
-int ValuePack::GetKey(std::string* key)
+std::string ValuePack::GetKey() const
 {
-	(*key) = m_Key;
-	return 1;
+	return m_Key;
 };
-int ValuePack::GetType(std::string* type)
+std::string ValuePack::GetType() const
 {
-	(*type) = m_Type;
-	return 1;
+	return m_Type;
 };
-int ValuePack::GetValueEscape(std::string* value)
+std::string ValuePack::GetValueEscape() const
 {
 	std::string hold = m_Value;
-	String2Escape(&hold);
-	(*value) += hold;
-	return 1;
+	Escape2String(&hold);
+	return hold;
 };
-int ValuePack::GetValue(std::string* value)
+std::string ValuePack::GetValue() const
 {
-	(*value) += m_Value;
-	return 1;
+	return m_Value;
 };
 
-int ValuePack::SetKey(std::string key)
+void ValuePack::SetKey(const std::string& key)
 {
 	m_Key = key;
-	return 1;
 };
-int ValuePack::SetType(std::string type)
+void ValuePack::SetType(const std::string& type)
 {
 	m_Type = type;
-	return 1;
 };
-int ValuePack::SetValueEscape(std::string value)
+void ValuePack::SetValueEscape(const std::string& value)
 {
-	Escape2String(&value);
+	std::string hold = value;
+	Escape2String(&hold);
+	m_Value = hold;
+};
+void ValuePack::SetValue(const std::string& value)
+{
 	m_Value = value;
-	return 1;
 };
-int ValuePack::SetValue(std::string value)
+std::string ValuePack::GetStreamEscape() const
 {
-	m_Value = value;
-	return 1;
-};
-int ValuePack::GetStreamEscape(std::string* stream)
-{
-	(*stream) += PACK_B;
-	(*stream) += m_Key;
-	(*stream) += TYPE_B;
-	(*stream) += m_Type;
-	(*stream) += TYPE_E;
-	(*stream) += VALUE;
+	std::string ret = "";
+	ret.push_back(PACK_B);
+	ret.append(m_Key);
+	ret.push_back(TYPE_B);
+	ret.append(m_Type);
+	ret.push_back(TYPE_E);
+	ret.push_back(VALUE);
+
 	std::string hold = m_Value;
 	String2Escape(&hold);
-	(*stream) += hold;
-	(*stream) += PACK_E;
-	return 1;
+	ret.append(hold);
+	ret.push_back(PACK_E);
+
+	return ret;
 };
-int ValuePack::GetStream(std::string* stream)
+std::string ValuePack::GetStream() const
 {
-	(*stream) += PACK_B;
-	(*stream) += m_Key;
-	(*stream) += TYPE_B;
-	(*stream) += m_Type;
-	(*stream) += TYPE_E;
-	(*stream) += VALUE;
-	(*stream) += m_Value;
-	(*stream) += PACK_E;
-	return 1;
+	std::string ret = "";
+	ret.push_back(PACK_B);
+	ret.append(m_Key);
+	ret.push_back(TYPE_B);
+	ret.append(m_Type);
+	ret.push_back(TYPE_E);
+	ret.push_back(VALUE);
+	ret.append(m_Value);
+	ret.push_back(PACK_E);
+
+	return ret;
 };
-int ValuePack::FindKeyShallow(std::string key, std::string type, BasePack** found)
+int ValuePack::FindKeyShallow(const std::string& key, const std::string& type, Package* found)
 {
 	int ret = 1;
 	if (IsKey(key, type))
@@ -336,7 +334,7 @@ int ValuePack::FindKeyShallow(std::string key, std::string type, BasePack** foun
 	}
 	return ret;
 };
-int ValuePack::FindKeyDeep(std::string key, std::string type, BasePack** found, int levels)
+int ValuePack::FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels)
 {
 	int ret = 1;
 	if (IsKey(key, type))
@@ -351,7 +349,7 @@ int ValuePack::FindKeyDeep(std::string key, std::string type, BasePack** found, 
 	}
 	return ret;
 };
-bool ValuePack::IsKey(std::string key, std::string type)
+bool ValuePack::IsKey(const std::string& key, const std::string& type)
 {
 	if (m_Type == type)
 	{
@@ -369,90 +367,92 @@ bool ValuePack::HasChildren()
 	return false;
 };
 
-void ValuePack::GetChildMap(std::map<std::string, BasePack* >* childMap)
+void ValuePack::GetChildMap(std::map<std::string, Package>* childMap)
 {
 	//no childern
 	childMap->clear();
 };
 
-int MultiPack::GetKey(std::string* key)
+
+std::string MultiPack::GetKey() const
 {
-	(*key) = m_Key;
-	return 1;
+	return m_Key;
 };
-int MultiPack::GetType(std::string* type)
+
+std::string MultiPack::GetType() const
 {
-	(*type) = m_Type;
-	return 1;
+return m_Type;
 };
-int MultiPack::GetValueEscape(std::string* value)
+
+std::string MultiPack::GetValueEscape() const
 {
-	std::vector<BasePack*>::iterator iter;
-	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
+	std::string hold = "";
+	for (auto iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
-		(*iter)->GetStreamEscape(value);
+		hold.append((*iter)->GetStreamEscape());
 	}
-	return 1;
+	return hold;
 };
-int MultiPack::GetValue(std::string* value)
+
+std::string MultiPack::GetValue() const
 {
-	std::vector<BasePack*>::iterator iter;
-	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
+	std::string hold = "";
+	for (auto iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
-		(*iter)->GetStream(value);
+		hold.append((*iter)->GetStream());
 	}
-	return 1;
+	return hold;
 };
-int MultiPack::SetKey(std::string key)
+
+void MultiPack::SetKey(const std::string& key)
 {
 	m_Key = key;
-	return 1;
 };
-int MultiPack::SetType(std::string type)
+
+void MultiPack::SetType(const std::string& type)
 {
 	m_Type = type;
-	return 1;
 };
 
-int MultiPack::GetStreamEscape(std::string* stream)
+std::string MultiPack::GetStreamEscape() const
 {
-	(*stream) += PACK_B;
-	(*stream) += m_Key;
-	(*stream) += TYPE_B;
-	(*stream) += m_Type;
-	(*stream) += TYPE_E;
-	(*stream) += VALUE;
-	std::vector<BasePack*>::iterator iter;
-	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
+	std::string ret = "";
+	ret.push_back(PACK_B);
+	ret.append(m_Key);
+	ret.push_back(TYPE_B);
+	ret.append(m_Type);
+	ret.push_back(TYPE_E);
+	ret.push_back(VALUE);
+	for (auto iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
-		(*iter)->GetStreamEscape(stream);
+		ret.append((*iter)->GetStreamEscape());
 	}
-	(*stream) += PACK_E;
-	return 1;
+	ret.push_back(PACK_E);
+	return ret;
 };
 
-int MultiPack::GetStream(std::string* stream)
+std::string MultiPack::GetStream() const
 {
-	(*stream) += PACK_B;
-	(*stream) += m_Key;
-	(*stream) += TYPE_B;
-	(*stream) += m_Type;
-	(*stream) += TYPE_E;
-	(*stream) += VALUE;
-	std::vector<BasePack*>::iterator iter;
-	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
+	std::string ret = "";
+	ret.push_back(PACK_B);
+	ret.append(m_Key);
+	ret.push_back(TYPE_B);
+	ret.append(m_Type);
+	ret.push_back(TYPE_E);
+	ret.push_back(VALUE);
+	for (auto iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
-		(*iter)->GetStream(stream);
+		ret.append((*iter)->GetStream());
 	}
-	(*stream) += PACK_E;
-	return 1;
+	ret.push_back(PACK_E);
+	return ret;
 };
 
-int MultiPack::FindKeyShallow(std::string key, std::string type, BasePack** found)
+int MultiPack::FindKeyShallow(const std::string& key, const std::string& type, Package* found)
 {
 	return FindKeyDeep(key, type, found, 1);
 };
-int MultiPack::FindKeyDeep(std::string key, std::string type, BasePack** found, int levels)
+int MultiPack::FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels)
 {
 	int ret = -1;
 	bool deep = true;
@@ -469,7 +469,7 @@ int MultiPack::FindKeyDeep(std::string key, std::string type, BasePack** found, 
 	{
 		if (deep)
 		{
-			std::vector<BasePack*>::iterator iter;
+			std::vector<IPack*>::iterator iter;
 			for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
 			{
 				ret = -1;
@@ -482,7 +482,7 @@ int MultiPack::FindKeyDeep(std::string key, std::string type, BasePack** found, 
 	return ret;
 };
 
-bool MultiPack::IsKey(std::string key, std::string type)
+bool MultiPack::IsKey(const std::string& key, const std::string& type)
 {
 	if (m_Type == type)
 	{
@@ -500,19 +500,18 @@ bool MultiPack::HasChildren()
 	return (m_Children.size() > 0);
 };
 
-void MultiPack::GetChildMap(std::map<std::string, BasePack* >* childMap)
+void MultiPack::GetChildMap(std::map<std::string, Package>* childMap)
 {
 	childMap->clear();
-	std::vector<BasePack*>::iterator iter;
+	std::vector<IPack*>::iterator iter;
 	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
-		std::string key = "";
-		(*iter)->GetKey(&key);
-		childMap->insert(std::pair<std::string, BasePack* >(key, (*iter)));
+		std::string key = (*iter)->GetKey();
+		childMap->insert(std::pair<std::string, Package>(key, (*iter)));
 	}
 };
 
-void MultiPack::AddChild(BasePack* child)
+void MultiPack::AddChild(Package child)
 {
 	m_Children.push_back(child);
 };

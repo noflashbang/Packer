@@ -23,8 +23,7 @@ public:
 		if (pack)
 		{
 			//key is unused, might need it later?
-			std::string value;
-			pack->GetValue(&value);
+			std::string value = pack->GetValue();
 			SerializerIn serializer(value);
 			T* ptr = (T*)object;
 			serializer.IO((*ptr));

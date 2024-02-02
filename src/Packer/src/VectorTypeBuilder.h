@@ -27,9 +27,9 @@ public:
 
 		if (pack->HasChildren())
 		{
-			std::map<std::string, BasePack* > childmap;
+			std::map<std::string, IPack* > childmap;
 			pack->GetChildMap(&childmap);
-			std::map<std::string, BasePack* >::iterator iter;
+			std::map<std::string, IPack* >::iterator iter;
 
 			unsigned long size = 0;
 			iter = childmap.find("SIZE");

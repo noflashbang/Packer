@@ -185,3 +185,122 @@ TEST_CASE("Test options can be packed", "[options]")
 	REQUIRE(testOut.vsync == false);
 	REQUIRE(testOut.show_fps == false);
 }
+
+typedef struct TEST_VEC_OPTIONS_
+{
+	std::vector<std::string> favorite_colors;
+	std::vector<int> favorite_numbers;
+	std::vector<float> favorite_floats;
+} TEST_VEC_OPTIONS;
+
+class TestVecOptionsBuilder : public TypeBuilder
+{
+public:
+	TestVecOptionsBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
+	virtual ~TestVecOptionsBuilder() {};
+	//BuildType is called to unpack an object
+	virtual int BuildType(std::string key, any_type* object, Package pack)
+	{
+		//The following is the basic format that all TypeBuilders follow:
+		int err = BUILD_OKAY;
+		//Cast the object pointer to the type that this builder is responsible for building
+		TEST_VEC_OPTIONS* ptr = (TEST_VEC_OPTIONS*)object;
+
+		//Test that our key and type match the package we have.
+		if (!pack->IsKey(key, GetBuilderTypeName()))
+		{
+			return BUILD_ERROR;
+		}
+
+		//For each member, use the TypeFactory to unpack the type(factories exist for all base types).
+		err = m_TypeFactory->BuildTypeFromPackage("favorite_colors", &ptr->favorite_colors, pack);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+
+		err = m_TypeFactory->BuildTypeFromPackage("favorite_numbers", &ptr->favorite_numbers, pack);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+
+		err = m_TypeFactory->BuildTypeFromPackage("favorite_floats", &ptr->favorite_floats, pack);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+
+		return err;
+	};
+	//BuildPack is called to pack an object.
+	virtual int BuildPack(std::string key, any_type* object, Package* pack)
+	{
+		int err = BUILD_OKAY;
+		//Cast the object pointer to the correct type
+		TEST_VEC_OPTIONS* ptr = (TEST_VEC_OPTIONS*)object;
+
+		//MultiPacks can hold many values, ValuePacks only hold one value
+		MultiPack* package = new MultiPack;
+		package->SetKey(key); //set the key
+		package->SetType(GetBuilderTypeName()); //set the type
+
+		//add all members
+		Package hold = NULL;
+		err = m_TypeFactory->BuildPackageFromType("favorite_colors", &ptr->favorite_colors, &hold);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+		package->AddChild(hold);
+		hold = NULL;
+
+		err = m_TypeFactory->BuildPackageFromType("favorite_numbers", &ptr->favorite_numbers, &hold);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+		package->AddChild(hold);
+		hold = NULL;
+
+		err = m_TypeFactory->BuildPackageFromType("favorite_floats", &ptr->favorite_floats, &hold);
+		if (err != BUILD_OKAY) return BUILD_ERROR;
+		package->AddChild(hold);
+		hold = NULL;
+
+		(*pack) = package; //return the package
+
+		return err;
+	};
+};
+
+TEST_CASE("Test vector options", "[options]")
+{
+	TEST_VEC_OPTIONS options;
+	options.favorite_colors.push_back("Red");
+	options.favorite_colors.push_back("Green");
+	options.favorite_colors.push_back("Blue");
+	options.favorite_numbers.push_back(1);
+	options.favorite_numbers.push_back(2);
+	options.favorite_numbers.push_back(3);
+	options.favorite_floats.push_back(1.0f);
+	options.favorite_floats.push_back(2.0f);
+	options.favorite_floats.push_back(3.0f);
+
+
+	//Register the default factories
+	TypeFactory typeFactory;
+	typeFactory.AddDefaultFactories(true, true);
+
+	//register any custom factories
+	//TypeFactory::RegisterNewFactory(NULL pointer to type that will be built, name of type, instance of the factory);
+	typeFactory.RegisterNewFactory((TEST_VEC_OPTIONS*)0, "TEST_VEC_OPTIONS", new TestVecOptionsBuilder(&typeFactory));
+
+	//Pack the object
+	std::string pack;
+	typeFactory.BuildStringFromType("TEST", &options, &pack);
+
+	//Unpack the object
+	TEST_VEC_OPTIONS testOut;
+	//memset(&testOut, 0, sizeof(TEST_OPTIONS));
+	typeFactory.BuildTypeFromString("TEST", &testOut, pack);
+
+	REQUIRE(testOut.favorite_colors.size() == 3);
+	REQUIRE(testOut.favorite_numbers.size() == 3);
+	REQUIRE(testOut.favorite_floats.size() == 3);
+
+	REQUIRE(testOut.favorite_colors[0] == "Red");
+	REQUIRE(testOut.favorite_colors[1] == "Green");
+	REQUIRE(testOut.favorite_colors[2] == "Blue");
+	REQUIRE(testOut.favorite_numbers[0] == 1);
+	REQUIRE(testOut.favorite_numbers[1] == 2);
+	REQUIRE(testOut.favorite_numbers[2] == 3);
+	REQUIRE(testOut.favorite_floats[0] == 1.0f);
+	REQUIRE(testOut.favorite_floats[1] == 2.0f);
+	REQUIRE(testOut.favorite_floats[2] == 3.0f);
+}

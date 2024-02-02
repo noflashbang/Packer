@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-
+#include <memory>
 
 #include "Pack.h"
 #include "TypeDef.h"
