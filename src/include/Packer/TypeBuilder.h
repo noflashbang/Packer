@@ -17,16 +17,20 @@ public:
 	TypeBuilder(TypeFactory* pTypeFactory);
 	virtual ~TypeBuilder() {};
 
-	virtual int BuildType(std::string key, any_type* object, Package pack) = 0;
-	virtual int BuildPack(std::string key, any_type* object, Package* pack) = 0;
-	void SetTypeRegistration(TypeRegistration type);
-	long GetBuilderTypeID();
-	std::string GetBuilderTypeName();
-	bool IsBuilderType(long ID);
-	bool IsBuilderTypeName(std::string name);
+	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack) = 0;
+	virtual int Package(const std::string& key, any_type* object, IPack** pack) = 0;
+
+	void SetTypeRegistration(const TypeRegistration& typeReg);
+
+	long GetBuilderTypeID() const;
+	std::string GetBuilderTypeName() const;
+	
+	bool IsBuilderType(long ID) const;
+	bool IsBuilderTypeName(const std::string& name) const;
 
 protected:
 	TypeFactory* m_TypeFactory;
+
 private:
 	TypeRegistration m_TypeReg;
 };

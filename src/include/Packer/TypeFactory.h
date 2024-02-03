@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <type_traits>
 
 #include "Pack.h"
 #include "TypeReg.h"
@@ -16,34 +17,39 @@ public:
 	TypeFactory();
 	~TypeFactory();
 
-	template<typename T>
-	long RegisterNewFactory(T* PointerOfType, std::string TypeName, TypeBuilder* Builder)
+	template<typename T, typename B>
+	long RegisterNewFactory(const std::string& typeName)
 	{
+		static_assert(std::is_base_of<TypeBuilder, B>::value, "B Type must be derived from TypeBuilder");
+		
+		T* pointerOfType = nullptr;
+
+		std::unique_ptr<TypeBuilder> builder = std::make_unique<B>(this);
 		TypeRegistration typereg;
-		TypeRegister::RegisterTypeInfo(PointerOfType, TypeName);
-		TypeRegister::GetTypeRegister(PointerOfType, &typereg);
-		Builder->SetTypeRegistration(typereg);
-		AddBuilderInternal(Builder);
+		TypeRegister::RegisterTypeInfo(pointerOfType, typeName);
+		TypeRegister::GetTypeRegister(pointerOfType, &typereg);
+		builder->SetTypeRegistration(typereg);
+		AddBuilderInternal(builder);
 		return typereg.GetTypeID();
 	};
 
 	template<typename T>
-	int BuildTypeFromPackage(std::string key, T* object, Package pack)
+	int BuildTypeFromPackage(const std::string& key, T* object, IPack* pack)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		Package found = NULL;
+		IPack* found = NULL;
 		int located = pack->FindKeyShallow(key, TypeRegister::GetTypeName(object), &found);
 		if (!located)
 			return BUILD_ERROR;
 
-		return CallBuilder_BuildType(tobuild, key, object, found);
+		return CallBuilder_Unpackage(tobuild, key, object, found);
 	};
 
 	template<typename T>
-	int BuildPackageFromType(std::string key, T* object, Package* pack)
+	int BuildPackageFromType(std::string key, T* object, IPack** pack)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		return CallBuilder_BuildPack(tobuild, key, object, pack);
+		return CallBuilder_Package(tobuild, key, object, pack);
 	};
 
 	template<typename T>
@@ -51,7 +57,7 @@ public:
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
-		Package pack = NULL;
+		IPack* pack = NULL;
 		err = IPack::FromStream(objString, &pack);
 		if (err != 1)
 		{
@@ -59,12 +65,12 @@ public:
 			return err;
 		}
 
-		Package found = NULL;
+		IPack* found = NULL;
 		int located = pack->FindKeyShallow(key, TypeRegister::GetTypeName(object), &found); //only look one deep
 		if (!located)
 			return BUILD_ERROR;
 
-		err = CallBuilder_BuildType(tobuild, key, object, found);
+		err = CallBuilder_Unpackage(tobuild, key, object, found);
 		delete pack;
 		return err;
 	};
@@ -74,8 +80,8 @@ public:
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
-		Package pack = NULL;
-		err = CallBuilder_BuildPack(tobuild, key, object, &pack);
+		IPack* pack = NULL;
+		err = CallBuilder_Package(tobuild, key, object, &pack);
 		if (err != BUILD_OKAY)
 		{
 			delete pack;
@@ -87,17 +93,15 @@ public:
 		return err;
 	};
 
-	void AddDefaultFactories(bool basetypes, bool vectortypes);
+	void AddDefaultFactories();
 
 private:
 	
-
-	void AddStandardFactories(bool basetypes, bool vectortypes);
-	void AddBuilderInternal(TypeBuilder* Builder);
+	void AddBuilderInternal(std::unique_ptr<TypeBuilder>& builder);
 	TypeBuilder* FindBuilder(long TypeID);
 	TypeBuilder* FindBuilder(std::string TypeName);
-	int CallBuilder_BuildType(long typeID, std::string key, any_type* object, Package pack);
-	int CallBuilder_BuildPack(long typeID, std::string key, any_type* object, Package* pack);
+	int CallBuilder_Unpackage(long typeID, std::string key, any_type* object, IPack* pack);
+	int CallBuilder_Package(long typeID, std::string key, any_type* object, IPack** pack);
 
-	std::vector<TypeBuilder*> m_TypeBuilders;
+	std::vector<std::unique_ptr<TypeBuilder>> m_TypeBuilders;
 };

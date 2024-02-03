@@ -3,20 +3,20 @@
 #include "BaseTypeBuilder.h"
 #include "VectorTypeBuilder.h"
 
-void TypeFactory::AddBuilderInternal(TypeBuilder* Builder)
+void TypeFactory::AddBuilderInternal(std::unique_ptr<TypeBuilder>& builder)
 {
-	m_TypeBuilders.push_back(Builder);
+	m_TypeBuilders.push_back(std::move(builder));
 };
 
 TypeBuilder* TypeFactory::FindBuilder(long typeID)
 {
 	TypeBuilder* ret = NULL;
-	std::vector<TypeBuilder*>::iterator iter;
+	std::vector<std::unique_ptr<TypeBuilder>>::iterator iter;
 	for (iter = m_TypeBuilders.begin(); iter != m_TypeBuilders.end(); iter++)
 	{
 		if ((*iter)->IsBuilderType(typeID))
 		{
-			ret = (*iter);
+			ret = (*iter).get();
 			break;
 		}
 	}
@@ -25,123 +25,57 @@ TypeBuilder* TypeFactory::FindBuilder(long typeID)
 TypeBuilder* TypeFactory::FindBuilder(std::string TypeName)
 {
 	TypeBuilder* ret = NULL;
-	std::vector<TypeBuilder*>::iterator iter;
+	std::vector<std::unique_ptr<TypeBuilder>>::iterator iter;
 	for (iter = m_TypeBuilders.begin(); iter != m_TypeBuilders.end(); iter++)
 	{
 		if ((*iter)->IsBuilderTypeName(TypeName))
 		{
-			ret = (*iter);
+			ret = (*iter).get();
 			break;
 		}
 	}
 	return ret;
 };
 
-void TypeFactory::AddDefaultFactories(bool basetypes, bool vectortypes)
-{
-	AddStandardFactories(basetypes, vectortypes);
-};
-
 TypeFactory::TypeFactory()
 {
 };
 
-void TypeFactory::AddStandardFactories(bool basetypes, bool vectortypes)
+void TypeFactory::AddDefaultFactories()
 {
-	//all factories
-	TypeBuilder* base = 0;
 	long id = 0;
+	id = RegisterNewFactory<bool, BaseTypeBuilder<bool>>("BOOL");
+	id = RegisterNewFactory<char, BaseTypeBuilder<char>>("CHAR");
+	id = RegisterNewFactory<unsigned char, BaseTypeBuilder<unsigned char>>("UCHAR");
+	id = RegisterNewFactory<short, BaseTypeBuilder<short>>("SHORT");
+	id = RegisterNewFactory<unsigned short, BaseTypeBuilder<unsigned short>>("USHORT");
+	id = RegisterNewFactory<int, BaseTypeBuilder<int>>("INT");
+	id = RegisterNewFactory<unsigned int, BaseTypeBuilder<unsigned int>>("UINT");
+	id = RegisterNewFactory<long, BaseTypeBuilder<long>>("LONG");
+	id = RegisterNewFactory<unsigned long, BaseTypeBuilder<unsigned long>>("ULONG");
+	id = RegisterNewFactory<float, BaseTypeBuilder<float>>("FLOAT");
+	id = RegisterNewFactory<double, BaseTypeBuilder<double>>("DOUBLE");
+	id = RegisterNewFactory<std::string, BaseTypeBuilder<std::string>>("STRING");
 
-	if (basetypes || vectortypes)
-	{
-		base = new BaseTypeBuilder<bool>(this);
-		id = TypeFactory::RegisterNewFactory((bool*)0, "BOOL", base);
-
-		base = new BaseTypeBuilder<char>(this);
-		id = TypeFactory::RegisterNewFactory((char*)0, "CHAR", base);
-
-		base = new BaseTypeBuilder<unsigned char>(this);
-		id = TypeFactory::RegisterNewFactory((unsigned char*)0, "UCHAR", base);
-
-		base = new BaseTypeBuilder<short>(this);
-		id = TypeFactory::RegisterNewFactory((short*)0, "SHORT", base);
-
-		base = new BaseTypeBuilder<unsigned short>(this);
-		id = TypeFactory::RegisterNewFactory((unsigned short*)0, "USHORT", base);
-
-		base = new BaseTypeBuilder<int>(this);
-		id = TypeFactory::RegisterNewFactory((int*)0, "INT", base);
-
-		base = new BaseTypeBuilder<unsigned int>(this);
-		id = TypeFactory::RegisterNewFactory((unsigned int*)0, "UINT", base);
-
-		base = new BaseTypeBuilder<long>(this);
-		id = TypeFactory::RegisterNewFactory((long*)0, "LONG", base);
-
-		base = new BaseTypeBuilder<unsigned long>(this);
-		id = TypeFactory::RegisterNewFactory((unsigned long*)0, "ULONG", base);
-
-		base = new BaseTypeBuilder<float>(this);
-		id = TypeFactory::RegisterNewFactory((float*)0, "FLOAT", base);
-
-		base = new BaseTypeBuilder<double>(this);
-		id = TypeFactory::RegisterNewFactory((double*)0, "DOUBLE", base);
-
-		base = new BaseTypeBuilder<std::string>(this);
-		id = TypeFactory::RegisterNewFactory((std::string*)0, "STRING", base);
-	}
-	if (vectortypes)
-	{
-		base = new VectorTypeBuilder<bool>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<bool>*)0, "STLVECTOR_BOOL", base);
-
-		base = new VectorTypeBuilder<char>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<char>*)0, "STLVECTOR_CHAR", base);
-
-		base = new VectorTypeBuilder<unsigned char>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<unsigned char>*)0, "STLVECTOR_UCHAR", base);
-
-		base = new VectorTypeBuilder<short>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<short>*)0, "STLVECTOR_SHORT", base);
-
-		base = new VectorTypeBuilder<unsigned short>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<unsigned short>*)0, "STLVECTOR_USHORT", base);
-
-		base = new VectorTypeBuilder<int>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<int>*)0, "STLVECTOR_INT", base);
-
-		base = new VectorTypeBuilder<unsigned int>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<unsigned int>*)0, "STLVECTOR_UINT", base);
-
-		base = new VectorTypeBuilder<long>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<long>*)0, "STLVECTOR_LONG", base);
-
-		base = new VectorTypeBuilder<unsigned long>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<unsigned long>*)0, "STLVECTOR_ULONG", base);
-
-		base = new VectorTypeBuilder<float>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<float>*)0, "STLVECTOR_FLOAT", base);
-
-		base = new VectorTypeBuilder<double>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<double>*)0, "STLVECTOR_DOUBLE", base);
-
-		base = new VectorTypeBuilder<std::string>(this);
-		id = TypeFactory::RegisterNewFactory((std::vector<std::string>*)0, "STLVECTOR_STRING", base);
-	}
+	id = RegisterNewFactory<std::vector<bool>, VectorTypeBuilder<bool>>("BOOL_VEC");
+	id = RegisterNewFactory<std::vector<char>, VectorTypeBuilder<char>>("CHAR_VEC");
+	id = RegisterNewFactory<std::vector<unsigned char>, VectorTypeBuilder<unsigned char>>("UCHAR_VEC");
+	id = RegisterNewFactory<std::vector<short>, VectorTypeBuilder<short>>("SHORT_VEC");
+	id = RegisterNewFactory<std::vector<unsigned short>, VectorTypeBuilder<unsigned short>>("USHORT_VEC");
+	id = RegisterNewFactory<std::vector<int>, VectorTypeBuilder<int>>("INT_VEC");
+	id = RegisterNewFactory<std::vector<unsigned int>, VectorTypeBuilder<unsigned int>>("UINT_VEC");
+	id = RegisterNewFactory<std::vector<long>, VectorTypeBuilder<long>>("LONG_VEC");
+	id = RegisterNewFactory<std::vector<unsigned long>, VectorTypeBuilder<unsigned long>>("ULONG_VEC");
+	id = RegisterNewFactory<std::vector<float>, VectorTypeBuilder<float>>("FLOAT_VEC");
+	id = RegisterNewFactory<std::vector<double>, VectorTypeBuilder<double>>("DOUBLE_VEC");
+	id = RegisterNewFactory<std::vector<std::string>, VectorTypeBuilder<std::string>>("STRING_VEC");
 };
 
 TypeFactory::~TypeFactory()
 {
-	//delete all factories
-	std::vector<TypeBuilder*>::iterator iter;
-	for (iter = m_TypeBuilders.begin(); iter != m_TypeBuilders.end(); iter++)
-	{
-		delete (*iter);
-		(*iter) = 0;
-	}
 }
 
-int TypeFactory::CallBuilder_BuildType(long TypeID, std::string key, any_type* object, Package pPack)
+int TypeFactory::CallBuilder_Unpackage(long TypeID, std::string key, any_type* object, IPack* pPack)
 {
 	int ret = BUILD_OKAY;
 	TypeBuilder* builder = FindBuilder(TypeID);
@@ -150,7 +84,7 @@ int TypeFactory::CallBuilder_BuildType(long TypeID, std::string key, any_type* o
 		std::string typen = pPack->GetType();
 		if (builder->IsBuilderTypeName(typen)) //check for correct ptr and pack type
 		{
-			ret = builder->BuildType(key, object, pPack);
+			ret = builder->Unpackage(key, object, pPack);
 		}
 		else
 		{
@@ -163,13 +97,13 @@ int TypeFactory::CallBuilder_BuildType(long TypeID, std::string key, any_type* o
 	}
 	return ret;
 };
-int TypeFactory::CallBuilder_BuildPack(long TypeID, std::string key, any_type* object, Package* pack)
+int TypeFactory::CallBuilder_Package(long TypeID, std::string key, any_type* object, IPack** pack)
 {
 	int ret = BUILD_OKAY;
 	TypeBuilder* builder = FindBuilder(TypeID);
 	if (builder != NULL)
 	{
-		ret = builder->BuildPack(key, object, pack);
+		ret = builder->Package(key, object, pack);
 	}
 	else
 	{

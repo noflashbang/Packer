@@ -33,22 +33,23 @@ TypeRegistration::~TypeRegistration()
 {
 	//nothing
 };
-long TypeRegistration::GetTypeID()
+long TypeRegistration::GetTypeID() const
 {
 	return m_TypeID;
 };
-std::string TypeRegistration::GetTypeName()
+std::string TypeRegistration::GetTypeName() const
 {
 	return m_TypeName;
 };
-bool TypeRegistration::IsType(long ID)
+bool TypeRegistration::IsType(long ID) const
 {
 	return (ID == m_TypeID);
 };
-bool TypeRegistration::IsTypeName(std::string name)
+bool TypeRegistration::IsTypeName(const std::string& name) const
 {
-	std::transform(name.begin(), name.end(), name.begin(), ::toupper);
-	return (name == m_TypeName);
+	std::string namecpy = name;
+	std::transform(namecpy.begin(), namecpy.end(), namecpy.begin(), ::toupper);
+	return (namecpy == m_TypeName);
 };
 long TypeRegistration::GetNextID()
 {

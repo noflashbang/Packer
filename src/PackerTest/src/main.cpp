@@ -23,7 +23,7 @@ public:
     TestOptionsBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
     virtual ~TestOptionsBuilder() {};
     //BuildType is called to unpack an object
-    virtual int BuildType(std::string key, any_type* object, Package pack)
+    virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
     {
         //The following is the basic format that all TypeBuilders follow:
         int err = BUILD_OKAY;
@@ -64,7 +64,7 @@ public:
         return err;
     };
     //BuildPack is called to pack an object.
-    virtual int BuildPack(std::string key, any_type* object, Package* pack)
+    virtual int Package(const std::string& key, any_type* object, IPack** pack)
     {
         int err = BUILD_OKAY;
         //Cast the object pointer to the correct type
@@ -76,7 +76,7 @@ public:
         package->SetType(GetBuilderTypeName()); //set the type
 
         //add all members
-        Package hold = NULL;
+		IPack* hold = NULL;
         err = m_TypeFactory->BuildPackageFromType("window_pos_x", &ptr->window_pos_x, &hold);
         if (err != BUILD_OKAY) return BUILD_ERROR;
         package->AddChild(hold);
@@ -161,11 +161,11 @@ TEST_CASE("Test options can be packed", "[options]")
 
 	//Register the default factories
 	TypeFactory typeFactory;
-	typeFactory.AddDefaultFactories(true, true);
+	typeFactory.AddDefaultFactories();
 
 	//register any custom factories
 	//TypeFactory::RegisterNewFactory(NULL pointer to type that will be built, name of type, instance of the factory);
-	typeFactory.RegisterNewFactory((TEST_OPTIONS*)0, "TEST_OPTIONS", new TestOptionsBuilder(&typeFactory));
+	typeFactory.RegisterNewFactory<TEST_OPTIONS, TestOptionsBuilder>("TEST_OPTIONS");
 
 	//Pack the object
 	std::string pack;
@@ -199,7 +199,7 @@ public:
 	TestVecOptionsBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~TestVecOptionsBuilder() {};
 	//BuildType is called to unpack an object
-	virtual int BuildType(std::string key, any_type* object, Package pack)
+	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
 	{
 		//The following is the basic format that all TypeBuilders follow:
 		int err = BUILD_OKAY;
@@ -225,7 +225,7 @@ public:
 		return err;
 	};
 	//BuildPack is called to pack an object.
-	virtual int BuildPack(std::string key, any_type* object, Package* pack)
+	virtual int Package(const std::string& key, any_type* object, IPack** pack)
 	{
 		int err = BUILD_OKAY;
 		//Cast the object pointer to the correct type
@@ -237,7 +237,7 @@ public:
 		package->SetType(GetBuilderTypeName()); //set the type
 
 		//add all members
-		Package hold = NULL;
+		IPack* hold = NULL;
 		err = m_TypeFactory->BuildPackageFromType("favorite_colors", &ptr->favorite_colors, &hold);
 		if (err != BUILD_OKAY) return BUILD_ERROR;
 		package->AddChild(hold);
@@ -275,11 +275,11 @@ TEST_CASE("Test vector options", "[options]")
 
 	//Register the default factories
 	TypeFactory typeFactory;
-	typeFactory.AddDefaultFactories(true, true);
+	typeFactory.AddDefaultFactories();
 
 	//register any custom factories
 	//TypeFactory::RegisterNewFactory(NULL pointer to type that will be built, name of type, instance of the factory);
-	typeFactory.RegisterNewFactory((TEST_VEC_OPTIONS*)0, "TEST_VEC_OPTIONS", new TestVecOptionsBuilder(&typeFactory));
+	typeFactory.RegisterNewFactory<TEST_VEC_OPTIONS, TestVecOptionsBuilder>("TEST_VEC_OPTIONS");
 
 	//Pack the object
 	std::string pack;

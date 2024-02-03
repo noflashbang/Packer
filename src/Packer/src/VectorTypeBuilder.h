@@ -19,7 +19,7 @@ public:
 	VectorTypeBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~VectorTypeBuilder() {};
 
-	virtual int BuildType(std::string key, any_type* object, Package pack)
+	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
 	{
 		int err = BUILD_OKAY;
 		std::vector<T>* vector = (std::vector<T>*)object;
@@ -65,7 +65,7 @@ public:
 		return err;
 	};
 
-	virtual int BuildPack(std::string key, any_type* object, Package* pack)
+	virtual int Package(const std::string& key, any_type* object, IPack** pack)
 	{
 		int err = BUILD_OKAY;
 		std::vector<T>* vector = (std::vector<T>*)object;
@@ -73,7 +73,7 @@ public:
 
 		//add size
 		unsigned long size = vector->size();
-		Package sizepack;
+		IPack* sizepack;
 		err = m_TypeFactory->BuildPackageFromType("SIZE", &size, &sizepack);
 		buildpack->AddChild(sizepack);
 
@@ -83,7 +83,7 @@ public:
 			char numstr[10];
 			memset(numstr, 0, 10);
 			_itoa_s(iter, numstr, 10, 10);
-			Package elempack;
+			IPack* elempack;
 
 			auto elem = vector->at(iter);
 			

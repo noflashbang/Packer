@@ -1,7 +1,7 @@
 #include "Pack.h"
 #include <stack>
 
-int IPack::FromStream(const std::string& stream, Package* retpack)
+int IPack::FromStream(const std::string& stream, IPack** retpack)
 {
 	(*retpack) = NULL;
 
@@ -319,7 +319,7 @@ std::string ValuePack::GetStream() const
 
 	return ret;
 };
-int ValuePack::FindKeyShallow(const std::string& key, const std::string& type, Package* found)
+int ValuePack::FindKeyShallow(const std::string& key, const std::string& type, IPack** found)
 {
 	int ret = 1;
 	if (IsKey(key, type))
@@ -334,7 +334,7 @@ int ValuePack::FindKeyShallow(const std::string& key, const std::string& type, P
 	}
 	return ret;
 };
-int ValuePack::FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels)
+int ValuePack::FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels)
 {
 	int ret = 1;
 	if (IsKey(key, type))
@@ -367,7 +367,7 @@ bool ValuePack::HasChildren()
 	return false;
 };
 
-void ValuePack::GetChildMap(std::map<std::string, Package>* childMap)
+void ValuePack::GetChildMap(std::map<std::string, IPack*>* childMap)
 {
 	//no childern
 	childMap->clear();
@@ -448,11 +448,11 @@ std::string MultiPack::GetStream() const
 	return ret;
 };
 
-int MultiPack::FindKeyShallow(const std::string& key, const std::string& type, Package* found)
+int MultiPack::FindKeyShallow(const std::string& key, const std::string& type, IPack** found)
 {
 	return FindKeyDeep(key, type, found, 1);
 };
-int MultiPack::FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels)
+int MultiPack::FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels)
 {
 	int ret = -1;
 	bool deep = true;
@@ -500,18 +500,18 @@ bool MultiPack::HasChildren()
 	return (m_Children.size() > 0);
 };
 
-void MultiPack::GetChildMap(std::map<std::string, Package>* childMap)
+void MultiPack::GetChildMap(std::map<std::string, IPack*>* childMap)
 {
 	childMap->clear();
 	std::vector<IPack*>::iterator iter;
 	for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
 	{
 		std::string key = (*iter)->GetKey();
-		childMap->insert(std::pair<std::string, Package>(key, (*iter)));
+		childMap->insert(std::pair<std::string, IPack*>(key, (*iter)));
 	}
 };
 
-void MultiPack::AddChild(Package child)
+void MultiPack::AddChild(IPack* child)
 {
 	m_Children.push_back(child);
 };

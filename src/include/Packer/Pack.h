@@ -5,9 +5,6 @@
 #include <stack>
 #include <map>
 
-class IPack;
-typedef IPack* Package;
-
 class IPack
 {
 public:
@@ -42,14 +39,14 @@ public:
 #define VALUE  '='
 #define ESCAPE '@'
 
-	static int FromStream(const std::string& stream, Package* pack);
+	static int FromStream(const std::string& stream, IPack** pack);
 
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, Package* found) = 0;
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels) = 0;
+	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found) = 0;
+	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels) = 0;
 	virtual bool IsKey(const std::string& key, const std::string& type) = 0;
 
 	virtual bool HasChildren() = 0;
-	virtual void GetChildMap(std::map<std::string, Package>* childMap) = 0;
+	virtual void GetChildMap(std::map<std::string, IPack*>* childMap) = 0;
 };
 
 class ValuePack : public IPack
@@ -71,12 +68,12 @@ public:
 	virtual std::string GetStreamEscape() const;
 	virtual std::string GetStream() const;
 
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, Package* found);
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels);
+	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found);
+	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels);
 	virtual bool IsKey(const std::string& key, const std::string& type);
 
 	virtual bool HasChildren();
-	virtual void GetChildMap(std::map<std::string, Package>* childMap);
+	virtual void GetChildMap(std::map<std::string, IPack*>* childMap);
 
 private:
 	std::string m_Key;
@@ -111,19 +108,19 @@ public:
 	virtual std::string GetStreamEscape() const;
 	virtual std::string GetStream() const;
 
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, Package* found);
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, Package* found, int levels);
+	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found);
+	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels);
 	virtual bool IsKey(const std::string& key, const std::string& type);
 
 	virtual bool HasChildren();
-	virtual void GetChildMap(std::map<std::string, Package>* childMap);
+	virtual void GetChildMap(std::map<std::string, IPack*>* childMap);
 
-	void AddChild(Package child);
+	void AddChild(IPack* child);
 
 private:
 	std::string m_Key;
 	std::string m_Type;
-	std::vector<Package> m_Children;
+	std::vector<IPack*> m_Children;
 };
 
 inline void String2Escape(std::string* str)

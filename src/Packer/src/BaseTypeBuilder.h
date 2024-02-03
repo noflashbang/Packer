@@ -17,7 +17,7 @@ public:
 	BaseTypeBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~BaseTypeBuilder() {};
 
-	virtual int BuildType(std::string key, any_type* object, Package pack)
+	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
 	{
 		int err = BUILD_OKAY;
 		if (pack)
@@ -35,7 +35,7 @@ public:
 		return err;
 	};
 
-	virtual int BuildPack(std::string key, any_type* object, Package* pack)
+	virtual int Package(const std::string& key, any_type* object, IPack** pack)
 	{
 		std::string type = GetBuilderTypeName();
 		std::string value;

@@ -17,11 +17,11 @@ public:
 
 	~TypeRegistration();
 
-	long GetTypeID();
-	std::string GetTypeName();
+	long GetTypeID() const;
+	std::string GetTypeName() const;
 
-	bool IsType(long ID);
-	bool IsTypeName(std::string name);
+	bool IsType(long ID) const;
+	bool IsTypeName(const std::string& name) const;
 
 private:
 	TypeRegistration(std::string TypeName);
