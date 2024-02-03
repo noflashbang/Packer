@@ -2,7 +2,9 @@
 
 #include <vector>
 #include <type_traits>
+#include <memory>
 
+#include "Packer.h"
 #include "Pack.h"
 #include "TypeReg.h"
 #include "TypeBuilder.h"
@@ -20,10 +22,10 @@ public:
 	template<typename T, typename B>
 	long RegisterNewFactory(const std::string& typeName)
 	{
+		//help get a better error message
 		static_assert(std::is_base_of<TypeBuilder, B>::value, "B Type must be derived from TypeBuilder");
 		
 		T* pointerOfType = nullptr;
-
 		std::unique_ptr<TypeBuilder> builder = std::make_unique<B>(this);
 		TypeRegistration typereg;
 		TypeRegister::RegisterTypeInfo(pointerOfType, typeName);
@@ -34,22 +36,34 @@ public:
 	};
 
 	template<typename T>
-	int BuildTypeFromPackage(const std::string& key, T* object, IPack* pack)
+	int BuildTypeFromPackage(const std::string& key, T* object, std::weak_ptr<IPack> pack)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		IPack* found = NULL;
-		int located = pack->FindKeyShallow(key, TypeRegister::GetTypeName(object), &found);
-		if (!located)
+		auto current = pack.lock();
+		if (current == nullptr)
+		{
 			return BUILD_ERROR;
-
-		return CallBuilder_Unpackage(tobuild, key, object, found);
+		}
+		if (current->IsKey(key, TypeRegister::GetTypeName(object)))
+		{
+			return CallBuilder_Unpackage(tobuild, key, object, current);
+		}
+		else
+		{
+			current = current->FindKeyShallow(key, TypeRegister::GetTypeName(object));
+			if (current == nullptr)
+			{
+				return BUILD_ERROR;
+			}
+			return CallBuilder_Unpackage(tobuild, key, object, current);
+		}
 	};
 
 	template<typename T>
-	int BuildPackageFromType(std::string key, T* object, IPack** pack)
+	Packer::BuildPack BuildPackageFromType(std::string key, T* object)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		return CallBuilder_Package(tobuild, key, object, pack);
+		return CallBuilder_Package(tobuild, key, object);
 	};
 
 	template<typename T>
@@ -57,40 +71,33 @@ public:
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
 		int err = 0;
-		IPack* pack = NULL;
-		err = IPack::FromStream(objString, &pack);
-		if (err != 1)
+		
+		Packer::BuildPack package = Packer::FromStream(objString);
+		if (package.Status != BuildStatus::BUILD_OKAY)
 		{
-			delete pack;
-			return err;
+			return package.Status;
 		}
 
-		IPack* found = NULL;
-		int located = pack->FindKeyShallow(key, TypeRegister::GetTypeName(object), &found); //only look one deep
-		if (!located)
-			return BUILD_ERROR;
+		//std::shared_ptr<IPack> found = package.Package->FindKeyShallow(key, TypeRegister::GetTypeName(object)); //only look one deep
+		//if (found == nullptr)
+		//{
+		//	return BuildStatus::BUILD_ERROR;
+		//}			
 
-		err = CallBuilder_Unpackage(tobuild, key, object, found);
-		delete pack;
+		err = CallBuilder_Unpackage(tobuild, key, object, package.Package);
 		return err;
 	};
 
 	template<typename T>
-	int BuildStringFromType(std::string key, T* object, std::string* pObjString)
+	std::string BuildStringFromType(std::string key, T* object)
 	{
 		long tobuild = TypeRegister::GetTypeID(object);
-		int err = 0;
-		IPack* pack = NULL;
-		err = CallBuilder_Package(tobuild, key, object, &pack);
-		if (err != BUILD_OKAY)
+		Packer::BuildPack pack = CallBuilder_Package(tobuild, key, object);
+		if (pack.Status != BuildStatus::BUILD_OKAY)
 		{
-			delete pack;
-			return err;
+			return "";
 		}
-
-		*pObjString = pack->GetStreamEscape();
-		delete pack;
-		return err;
+		return pack.Package->GetStreamEscape();
 	};
 
 	void AddDefaultFactories();
@@ -100,8 +107,8 @@ private:
 	void AddBuilderInternal(std::unique_ptr<TypeBuilder>& builder);
 	TypeBuilder* FindBuilder(long TypeID);
 	TypeBuilder* FindBuilder(std::string TypeName);
-	int CallBuilder_Unpackage(long typeID, std::string key, any_type* object, IPack* pack);
-	int CallBuilder_Package(long typeID, std::string key, any_type* object, IPack** pack);
+	int CallBuilder_Unpackage(long typeID, std::string key, any_type* object, std::shared_ptr<IPack> pack);
+	Packer::BuildPack CallBuilder_Package(long typeID, std::string key, any_type* object);
 
 	std::vector<std::unique_ptr<TypeBuilder>> m_TypeBuilders;
 };

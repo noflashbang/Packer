@@ -5,49 +5,8 @@
 #include <stack>
 #include <map>
 
-class IPack
-{
-public:
-	IPack() {};
-	virtual ~IPack() {};
-
-	virtual std::string GetKey() const = 0;
-	virtual std::string GetType()  const = 0;
-
-	virtual std::string GetValueEscape()  const = 0;
-	virtual std::string GetValue()  const = 0;
-
-	virtual std::string GetStreamEscape()  const = 0;
-	virtual std::string GetStream()  const = 0;
-
-	typedef enum STATE_
-	{
-		STATE_NOSTATE = -1,
-		STATE_ERROR = 0,
-		STATE_LESS = 1, //'<'
-		STATE_BEGINP = 2, //'('
-		STATE_ENDP = 3, //')'
-		STATE_EQUAL = 4, //'='
-		STATE_GREATER = 5, //'>'
-		STATE_ESCAPE = 6, //'@'
-	} PARSE_STATE;
-
-#define PACK_B '<'
-#define PACK_E '>'
-#define TYPE_B '('
-#define TYPE_E ')'
-#define VALUE  '='
-#define ESCAPE '@'
-
-	static int FromStream(const std::string& stream, IPack** pack);
-
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found) = 0;
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels) = 0;
-	virtual bool IsKey(const std::string& key, const std::string& type) = 0;
-
-	virtual bool HasChildren() = 0;
-	virtual void GetChildMap(std::map<std::string, IPack*>* childMap) = 0;
-};
+#include "IPack.h"
+#include "Packer.h"
 
 class ValuePack : public IPack
 {
@@ -68,12 +27,12 @@ public:
 	virtual std::string GetStreamEscape() const;
 	virtual std::string GetStream() const;
 
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found);
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels);
+	virtual std::shared_ptr<IPack> FindKeyShallow(const std::string& key, const std::string& type);
+	virtual std::shared_ptr<IPack> FindKeyDeep(const std::string& key, const std::string& type, int levels);
 	virtual bool IsKey(const std::string& key, const std::string& type);
 
 	virtual bool HasChildren();
-	virtual void GetChildMap(std::map<std::string, IPack*>* childMap);
+	virtual void GetChildMap(std::map<std::string, std::weak_ptr<IPack>>* childMap);
 
 private:
 	std::string m_Key;
@@ -89,12 +48,6 @@ public:
 	{
 		m_Key = "";
 		m_Type = "";
-		std::vector<IPack*>::iterator iter;
-		for (iter = m_Children.begin(); iter != m_Children.end(); iter++)
-		{
-			delete (*iter);
-			(*iter) = NULL;
-		}
 	};
 
 	virtual std::string GetKey() const;
@@ -108,19 +61,19 @@ public:
 	virtual std::string GetStreamEscape() const;
 	virtual std::string GetStream() const;
 
-	virtual int FindKeyShallow(const std::string& key, const std::string& type, IPack** found);
-	virtual int FindKeyDeep(const std::string& key, const std::string& type, IPack** found, int levels);
+	virtual std::shared_ptr<IPack> FindKeyShallow(const std::string& key, const std::string& type);
+	virtual std::shared_ptr<IPack> FindKeyDeep(const std::string& key, const std::string& type, int levels);
 	virtual bool IsKey(const std::string& key, const std::string& type);
 
 	virtual bool HasChildren();
-	virtual void GetChildMap(std::map<std::string, IPack*>* childMap);
+	virtual void GetChildMap(std::map<std::string, std::weak_ptr<IPack>>* childMap);
 
-	void AddChild(IPack* child);
+	void AddChild(std::shared_ptr<IPack> child);
 
 private:
 	std::string m_Key;
 	std::string m_Type;
-	std::vector<IPack*> m_Children;
+	std::vector<std::shared_ptr<IPack>> m_Children;
 };
 
 inline void String2Escape(std::string* str)

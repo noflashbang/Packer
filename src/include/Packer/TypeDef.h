@@ -2,5 +2,8 @@
 
 typedef void any_type;
 
-#define BUILD_OKAY 1
-#define BUILD_ERROR -1
+enum BuildStatus
+{
+	BUILD_OKAY = 1,
+	BUILD_ERROR = -1
+};

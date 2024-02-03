@@ -4,7 +4,9 @@ add_compile_definitions(AUTOSET_EXPORTS)
 cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 
 set( externHeaders 
+	   ${PARENT_DIR}/include/Packer/IPack.h
        ${PARENT_DIR}/include/Packer/Pack.h
+       ${PARENT_DIR}/include/Packer/Packer.h
        ${PARENT_DIR}/include/Packer/TypeBuilder.h
        ${PARENT_DIR}/include/Packer/TypeDef.h
        ${PARENT_DIR}/include/Packer/TypeFactory.h
@@ -22,6 +24,7 @@ set( libHeaders
 )
 
 set( libSource
+	${CMAKE_CURRENT_SOURCE_DIR}/src/Packer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Pack.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialBase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SerialOut.cpp

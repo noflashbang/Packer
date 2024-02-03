@@ -17,8 +17,8 @@ public:
 	TypeBuilder(TypeFactory* pTypeFactory);
 	virtual ~TypeBuilder() {};
 
-	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack) = 0;
-	virtual int Package(const std::string& key, any_type* object, IPack** pack) = 0;
+	virtual int Unpackage(const std::string& key, any_type* object, std::shared_ptr<IPack> pack) = 0;
+	virtual Packer::BuildPack Package(const std::string& key, any_type* object) = 0;
 
 	void SetTypeRegistration(const TypeRegistration& typeReg);
 

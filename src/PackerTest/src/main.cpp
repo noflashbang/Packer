@@ -9,8 +9,8 @@ typedef struct TEST_OPTIONS_
 {
 	int window_pos_x;
 	int window_pos_y;
-	int wiundow_size_x;
-	int wiundow_size_y;
+	int window_size_x;
+	int window_size_y;
 	std::string window_title;
 	bool full_screen;
 	bool vsync;
@@ -23,7 +23,7 @@ public:
     TestOptionsBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
     virtual ~TestOptionsBuilder() {};
     //BuildType is called to unpack an object
-    virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
+    virtual int Unpackage(const std::string& key, any_type* object, std::shared_ptr<IPack> pack)
     {
         //The following is the basic format that all TypeBuilders follow:
         int err = BUILD_OKAY;
@@ -43,10 +43,10 @@ public:
         err = m_TypeFactory->BuildTypeFromPackage("window_pos_y", &ptr->window_pos_y, pack);
 		if (err != BUILD_OKAY) return BUILD_ERROR;
 
-        err = m_TypeFactory->BuildTypeFromPackage("wiundow_size_x", &ptr->wiundow_size_x, pack);
+        err = m_TypeFactory->BuildTypeFromPackage("window_size_x", &ptr->window_size_x, pack);
 		if (err != BUILD_OKAY) return BUILD_ERROR;
 
-        err = m_TypeFactory->BuildTypeFromPackage("wiundow_size_y", &ptr->wiundow_size_y, pack);
+        err = m_TypeFactory->BuildTypeFromPackage("window_size_y", &ptr->window_size_y, pack);
 		if (err != BUILD_OKAY) return BUILD_ERROR;
 
         err = m_TypeFactory->BuildTypeFromPackage("window_title", &ptr->window_title, pack);
@@ -64,62 +64,66 @@ public:
         return err;
     };
     //BuildPack is called to pack an object.
-    virtual int Package(const std::string& key, any_type* object, IPack** pack)
+    virtual Packer::BuildPack Package(const std::string& key, any_type* object)
     {
-        int err = BUILD_OKAY;
         //Cast the object pointer to the correct type
         TEST_OPTIONS* ptr = (TEST_OPTIONS*)object;
 
         //MultiPacks can hold many values, ValuePacks only hold one value
-        MultiPack* package = new MultiPack;
+        std::shared_ptr<MultiPack> package = std::make_shared<MultiPack>();
         package->SetKey(key); //set the key
         package->SetType(GetBuilderTypeName()); //set the type
 
         //add all members
-		IPack* hold = NULL;
-        err = m_TypeFactory->BuildPackageFromType("window_pos_x", &ptr->window_pos_x, &hold);
-        if (err != BUILD_OKAY) return BUILD_ERROR;
-        package->AddChild(hold);
-        hold = NULL;
+		Packer::BuildPack result = m_TypeFactory->BuildPackageFromType("window_pos_x", &ptr->window_pos_x);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("window_pos_y", &ptr->window_pos_y, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("window_pos_y", &ptr->window_pos_y);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("wiundow_size_x", &ptr->wiundow_size_x, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("window_size_x", &ptr->window_size_x);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("wiundow_size_y", &ptr->wiundow_size_y, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("window_size_y", &ptr->window_size_y);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}	
 
-		err = m_TypeFactory->BuildPackageFromType("window_title", &ptr->window_title, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("window_title", &ptr->window_title);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("full_screen", &ptr->full_screen, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("full_screen", &ptr->full_screen);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("vsync", &ptr->vsync, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("vsync", &ptr->vsync);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("show_fps", &ptr->show_fps, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("show_fps", &ptr->show_fps);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-        (*pack) = package; //return the package
-
-        return err;
+		return { BUILD_OKAY, package };
     };
 };
 
@@ -129,8 +133,8 @@ TEST_CASE("Test options", "[options]")
 	TEST_OPTIONS options;
 	options.window_pos_x = 100;
 	options.window_pos_y = 100;
-	options.wiundow_size_x = 800;
-	options.wiundow_size_y = 600;
+	options.window_size_x = 800;
+	options.window_size_y = 600;
 	options.window_title = "Test window";
 	options.full_screen = false;
 	options.vsync = true;
@@ -138,8 +142,8 @@ TEST_CASE("Test options", "[options]")
 
 	REQUIRE(options.window_pos_x == 100);
 	REQUIRE(options.window_pos_y == 100);
-	REQUIRE(options.wiundow_size_x == 800);
-	REQUIRE(options.wiundow_size_y == 600);
+	REQUIRE(options.window_size_x == 800);
+	REQUIRE(options.window_size_y == 600);
 	REQUIRE(options.window_title == "Test window");
 	REQUIRE(options.full_screen == false);
 	REQUIRE(options.vsync == true);
@@ -151,8 +155,8 @@ TEST_CASE("Test options can be packed", "[options]")
 	TEST_OPTIONS options;
 	options.window_pos_x = 200;
 	options.window_pos_y = 200;
-	options.wiundow_size_x = 1024;
-	options.wiundow_size_y = 768;
+	options.window_size_x = 1024;
+	options.window_size_y = 768;
 	options.window_title = "Test window 2";
 	options.full_screen = true;
 	options.vsync = false;
@@ -168,8 +172,7 @@ TEST_CASE("Test options can be packed", "[options]")
 	typeFactory.RegisterNewFactory<TEST_OPTIONS, TestOptionsBuilder>("TEST_OPTIONS");
 
 	//Pack the object
-	std::string pack;
-	typeFactory.BuildStringFromType("TEST", &options, &pack);
+	std::string pack = typeFactory.BuildStringFromType("TEST", &options);
 
 	//Unpack the object
 	TEST_OPTIONS testOut;
@@ -178,8 +181,8 @@ TEST_CASE("Test options can be packed", "[options]")
 
 	REQUIRE(testOut.window_pos_x == 200);
 	REQUIRE(testOut.window_pos_y == 200);
-	REQUIRE(testOut.wiundow_size_x == 1024);
-	REQUIRE(testOut.wiundow_size_y == 768);
+	REQUIRE(testOut.window_size_x == 1024);
+	REQUIRE(testOut.window_size_y == 768);
 	REQUIRE(testOut.window_title == "Test window 2");
 	REQUIRE(testOut.full_screen == true);
 	REQUIRE(testOut.vsync == false);
@@ -199,7 +202,7 @@ public:
 	TestVecOptionsBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~TestVecOptionsBuilder() {};
 	//BuildType is called to unpack an object
-	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
+	virtual int Unpackage(const std::string& key, any_type* object, std::shared_ptr<IPack> pack)
 	{
 		//The following is the basic format that all TypeBuilders follow:
 		int err = BUILD_OKAY;
@@ -225,37 +228,37 @@ public:
 		return err;
 	};
 	//BuildPack is called to pack an object.
-	virtual int Package(const std::string& key, any_type* object, IPack** pack)
+	virtual Packer::BuildPack Package(const std::string& key, any_type* object)
 	{
 		int err = BUILD_OKAY;
 		//Cast the object pointer to the correct type
 		TEST_VEC_OPTIONS* ptr = (TEST_VEC_OPTIONS*)object;
 
 		//MultiPacks can hold many values, ValuePacks only hold one value
-		MultiPack* package = new MultiPack;
+		std::shared_ptr<MultiPack> package = std::make_shared<MultiPack>();
 		package->SetKey(key); //set the key
 		package->SetType(GetBuilderTypeName()); //set the type
 
 		//add all members
-		IPack* hold = NULL;
-		err = m_TypeFactory->BuildPackageFromType("favorite_colors", &ptr->favorite_colors, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		Packer::BuildPack result = m_TypeFactory->BuildPackageFromType("favorite_colors", &ptr->favorite_colors);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("favorite_numbers", &ptr->favorite_numbers, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("favorite_numbers", &ptr->favorite_numbers);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		err = m_TypeFactory->BuildPackageFromType("favorite_floats", &ptr->favorite_floats, &hold);
-		if (err != BUILD_OKAY) return BUILD_ERROR;
-		package->AddChild(hold);
-		hold = NULL;
+		result = m_TypeFactory->BuildPackageFromType("favorite_floats", &ptr->favorite_floats);
+		if (result.Status == BUILD_OKAY)
+		{
+			package->AddChild(result.Package);
+		}
 
-		(*pack) = package; //return the package
-
-		return err;
+		return { BUILD_OKAY, package };
 	};
 };
 
@@ -282,8 +285,7 @@ TEST_CASE("Test vector options", "[options]")
 	typeFactory.RegisterNewFactory<TEST_VEC_OPTIONS, TestVecOptionsBuilder>("TEST_VEC_OPTIONS");
 
 	//Pack the object
-	std::string pack;
-	typeFactory.BuildStringFromType("TEST", &options, &pack);
+	std::string pack = typeFactory.BuildStringFromType("TEST", &options);
 
 	//Unpack the object
 	TEST_VEC_OPTIONS testOut;

@@ -75,16 +75,16 @@ TypeFactory::~TypeFactory()
 {
 }
 
-int TypeFactory::CallBuilder_Unpackage(long TypeID, std::string key, any_type* object, IPack* pPack)
+int TypeFactory::CallBuilder_Unpackage(long TypeID, std::string key, any_type* object, std::shared_ptr<IPack> pack)
 {
 	int ret = BUILD_OKAY;
 	TypeBuilder* builder = FindBuilder(TypeID);
-	if (builder != NULL)
+	if (builder != nullptr)
 	{
-		std::string typen = pPack->GetType();
+		std::string typen = pack->GetType();
 		if (builder->IsBuilderTypeName(typen)) //check for correct ptr and pack type
 		{
-			ret = builder->Unpackage(key, object, pPack);
+			ret = builder->Unpackage(key, object, pack);
 		}
 		else
 		{
@@ -97,17 +97,15 @@ int TypeFactory::CallBuilder_Unpackage(long TypeID, std::string key, any_type* o
 	}
 	return ret;
 };
-int TypeFactory::CallBuilder_Package(long TypeID, std::string key, any_type* object, IPack** pack)
+Packer::BuildPack TypeFactory::CallBuilder_Package(long TypeID, std::string key, any_type* object)
 {
-	int ret = BUILD_OKAY;
 	TypeBuilder* builder = FindBuilder(TypeID);
-	if (builder != NULL)
+	if (builder != nullptr)
 	{
-		ret = builder->Package(key, object, pack);
+		return builder->Package(key, object);
 	}
 	else
 	{
-		ret = BUILD_ERROR;
+		return Packer::BuildPack(BUILD_ERROR, nullptr);
 	}
-	return ret;
 };

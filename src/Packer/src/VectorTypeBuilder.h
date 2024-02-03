@@ -19,7 +19,7 @@ public:
 	VectorTypeBuilder(TypeFactory* pTypeFactory) : TypeBuilder(pTypeFactory) {};
 	virtual ~VectorTypeBuilder() {};
 
-	virtual int Unpackage(const std::string& key, any_type* object, IPack* pack)
+	virtual int Unpackage(const std::string& key, any_type* object, std::shared_ptr<IPack> pack)
 	{
 		int err = BUILD_OKAY;
 		std::vector<T>* vector = (std::vector<T>*)object;
@@ -27,9 +27,9 @@ public:
 
 		if (pack->HasChildren())
 		{
-			std::map<std::string, IPack* > childmap;
+			std::map<std::string, std::weak_ptr<IPack>> childmap;
 			pack->GetChildMap(&childmap);
-			std::map<std::string, IPack* >::iterator iter;
+			std::map<std::string, std::weak_ptr<IPack>>::iterator iter;
 
 			unsigned long size = 0;
 			iter = childmap.find("SIZE");
@@ -65,17 +65,14 @@ public:
 		return err;
 	};
 
-	virtual int Package(const std::string& key, any_type* object, IPack** pack)
+	virtual Packer::BuildPack Package(const std::string& key, any_type* object)
 	{
-		int err = BUILD_OKAY;
 		std::vector<T>* vector = (std::vector<T>*)object;
-		MultiPack* buildpack = new MultiPack;
-
+		std::shared_ptr<MultiPack> buildpack = std::make_shared<MultiPack>();
 		//add size
 		unsigned long size = vector->size();
-		IPack* sizepack;
-		err = m_TypeFactory->BuildPackageFromType("SIZE", &size, &sizepack);
-		buildpack->AddChild(sizepack);
+		Packer::BuildPack result = m_TypeFactory->BuildPackageFromType("SIZE", &size);
+		buildpack->AddChild(result.Package);
 
 		//now add all the elements
 		for (unsigned long iter = 0; iter < size; iter++)
@@ -83,14 +80,12 @@ public:
 			char numstr[10];
 			memset(numstr, 0, 10);
 			_itoa_s(iter, numstr, 10, 10);
-			IPack* elempack;
-
-			auto elem = vector->at(iter);
 			
-			err = m_TypeFactory->BuildPackageFromType(numstr, &elem, &elempack);
-			if (err == BUILD_OKAY)
+			auto elem = vector->at(iter);
+			Packer::BuildPack elempack = m_TypeFactory->BuildPackageFromType(numstr, &elem);
+			if (elempack.Status == BUILD_OKAY)
 			{
-				buildpack->AddChild(elempack);
+				buildpack->AddChild(elempack.Package);
 			}
 			else
 			{
@@ -98,11 +93,9 @@ public:
 			}
 		}
 		buildpack->SetKey(key);
-
 		std::string type = GetBuilderTypeName();
 		buildpack->SetType(type);
 
-		(*pack) = buildpack;
-		return err;
+		return { BUILD_OKAY, buildpack };
 	};
 };
